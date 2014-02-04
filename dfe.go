@@ -189,7 +189,75 @@ func printDirMat(dirmat [][]int) {
 	for i := 0; i < 64; i++ {
 		fmt.Print("_")
 	}
-	fmt.Print(" ")
+	fmt.Print(" \n")
+}
+
+func featureVector(dirmat [][]int) {	
+	// Initialize our feature counters
+	// One for each exclusive sub-window
+	aFeats := make([]int, 4)
+	
+	bFeats := make([]int, 4)
+	
+	cFeats := make([]int, 4)
+	
+	dFeats := make([]int, 4)
+	
+	// Slide a 16x16px window by 8px at a time
+	for y := 0; y <= 48; y += 8 {
+		for x := 0; x <= 48; x += 8 {
+			// x and y now define the coordinates of the upper left corner of our window
+			
+			// count features
+			
+			// vary our feature section based on what subimage we're counting
+			var secFeats *[]int
+			for yp := 0; yp < 16; yp++ {
+				for xp := 0; xp < 16; xp++ {
+					// blank out all feature arrays for this subwindow
+					for i := range aFeats {
+						aFeats[i] = 0
+						bFeats[i] = 0
+						cFeats[i] = 0
+						dFeats[i] = 0
+					}
+					
+					// argh
+					switch {
+						case yp < 2, yp > 14, xp < 2, xp > 14:
+							secFeats = &aFeats
+						case (yp >= 2 && yp < 4), (yp >= 12 && yp < 14), (xp >= 2 && yp < 4), (xp >= 12 && xp < 14):
+							secFeats = &bFeats
+						case (yp >= 4 && yp < 6), (yp >= 9 && yp < 12), (xp >= 4 && yp < 6), (xp >= 9 && xp < 12):
+							secFeats = &bFeats
+						case (yp >= 6 && yp <= 9), (xp >= 6 && xp <= 9):
+							secFeats = &dFeats
+					}
+					
+					feature := dirmat[y + yp][x + xp]
+					
+					// double argh
+					switch feature {
+						case 0, 1, 2, 3: (*secFeats)[feature]++
+						case 4, 5:
+							(*secFeats)[0]++
+							(*secFeats)[3]++
+						case 6, 7:
+							(*secFeats)[0]++
+							(*secFeats)[2]++
+						case 8, 9:
+							(*secFeats)[1]++
+							(*secFeats)[3]++
+						case 10, 11:
+							(*secFeats)[1]++
+							(*secFeats)[2]++
+					}
+					
+					// TODO: weight features and form a real vector
+				}
+			}
+		}
+	}
 }
 
 func main() {
@@ -232,4 +300,5 @@ func main() {
 	defer writer.Close()*/
 	
 	printDirMat(dirMat(contour))
+	featureVector(dirMat(contour))
 }
