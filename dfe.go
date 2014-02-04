@@ -18,6 +18,7 @@ const C_WHITE = 0xFFFF
 
 const NO_DIR = -1
 
+// Each feature key in this map describes a 3x3 pixel area from left to right and then top down.
 var features = map[string]int {
 	"WWWBBBWWW": 0, //		A		-
 	"WBWWBWWBW": 1, //		B		|
@@ -33,10 +34,6 @@ var features = map[string]int {
 	"BWWWBWWBW": 11, //		L		\|
 }
 
-/**
- * Returns whether or not a pixel in a given black-and-white image is black.
- * This function disregards the alpha value.
- */
 func isBlack(img image.Image, x, y int) bool {
 	r, g, b, _ := img.At(x, y).RGBA()
 	
@@ -58,6 +55,8 @@ func inBounds(img image.Image, x, y int) bool {
 			y < bounds.Max.Y)
 }
 
+// makeContour takes a normalized kanji and removes all non-border pixels, 
+// producing a contour line image.
 func makeContour(img image.Image) image.Image  {
 	bounds := img.Bounds()
 	
@@ -116,6 +115,7 @@ func makeContour(img image.Image) image.Image  {
 	return contour
 }
 
+// pixDir determines the line direction of an individual pixel.
 func pixDir(img image.Image, x, y int) int {
 	dirarr := make([]byte, 9)
 	chptr := 0
@@ -147,6 +147,7 @@ func pixDir(img image.Image, x, y int) int {
 	}
 }
 
+// dirMat produces a matrix of integers describing the line direction of each pixel.
 func dirMat(img image.Image) [][]int {
 	bounds := img.Bounds()
 	xsize := bounds.Max.X - bounds.Min.X
@@ -166,6 +167,7 @@ func dirMat(img image.Image) [][]int {
 	return dirs
 }
 
+// printDirMat prints a matrix of characters that describe the line direction of pixels.
 func printDirMat(dirmat [][]int) {
 	fmt.Print(" ")
 	for i := 0; i < 64; i++ {
@@ -192,8 +194,9 @@ func printDirMat(dirmat [][]int) {
 	fmt.Print(" \n")
 }
 
-// These range functions do not work on their own
-// However, they remain exclusively classifying by applying them in outward order (see below)
+// These range functions do not work properly on their own.
+// However, they can classify ranges exclusively when applied in outward order (see below).
+
 func inARange(x, y int) bool {
 	return (x >= 6 && x <= 9) && (y >= 6 && y <= 9)
 }
@@ -206,6 +209,7 @@ func inCRange(x, y int) bool {
 	return (x >= 2 && x <= 13) && (y >= 2 && y <= 13)
 }
 
+// featureVector extracts a 196-dimensional vector that describes a 64x64 kanji.
 func featureVector(dirmat [][]int) []int {
 	// Initialize our feature counters
 	// One for each exclusive sub-window
@@ -242,7 +246,9 @@ func featureVector(dirmat [][]int) []int {
 			var secFeats *[]int
 			for yp := 0; yp < 16; yp++ {
 				for xp := 0; xp < 16; xp++ {
-					// argh
+					// select our range and set our current section pointer
+					// TODO:	better way to do section classification?
+					// 			more elegant loop?
 					switch {
 						case inARange(xp, yp):
 							secFeats = &aFeats
@@ -256,7 +262,8 @@ func featureVector(dirmat [][]int) []int {
 					
 					feature := dirmat[y + yp][x + xp]
 					
-					// double argh
+					// complex features reduce to two simple features
+					// TODO: come up with a more elegant reduction
 					switch feature {
 						case 0, 1, 2, 3:
 							(*secFeats)[feature]++
@@ -318,13 +325,6 @@ func main() {
 	}
 	
 	contour := makeContour(img)
-	
-	/** writer, werr := os.Create(os.Args[2])
-	if werr != nil {
-		log.Fatal(err)
-		return
-	}
-	defer writer.Close()*/
 	
 	dmc := dirMat(contour)
 	
