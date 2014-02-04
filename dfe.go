@@ -192,9 +192,24 @@ func printDirMat(dirmat [][]int) {
 	fmt.Print(" \n")
 }
 
-func featureVector(dirmat [][]int) {	
+// These range functions do not work on their own
+// However, they remain exclusively classifying by applying them in outward order (see below)
+func inARange(x, y int) bool {
+	return (x >= 6 && x <= 9) && (y >= 6 && y <= 9)
+}
+
+func inBRange(x, y int) bool {
+	return (x >= 4 && x <= 11) && (y >= 4 && y <= 11)
+}
+
+func inCRange(x, y int) bool {
+	return (x >= 2 && x <= 13) && (y >= 2 && y <= 13)
+}
+
+func featureVector(dirmat [][]int) []int {
 	// Initialize our feature counters
 	// One for each exclusive sub-window
+	// These are used for each sub-window, but we allocate them here and reset them in the loop
 	aFeats := make([]int, 4)
 	
 	bFeats := make([]int, 4)
@@ -203,10 +218,23 @@ func featureVector(dirmat [][]int) {
 	
 	dFeats := make([]int, 4)
 	
+	// This is the ultimate feature vector
+	features := make([]int, 196)
+	featPtr := 0
+	
 	// Slide a 16x16px window by 8px at a time
 	for y := 0; y <= 48; y += 8 {
 		for x := 0; x <= 48; x += 8 {
+	
 			// x and y now define the coordinates of the upper left corner of our window
+			
+			// blank out all feature arrays for this subwindow
+			for i := range aFeats {
+				aFeats[i] = 0
+				bFeats[i] = 0
+				cFeats[i] = 0
+				dFeats[i] = 0
+			}
 			
 			// count features
 			
@@ -214,23 +242,15 @@ func featureVector(dirmat [][]int) {
 			var secFeats *[]int
 			for yp := 0; yp < 16; yp++ {
 				for xp := 0; xp < 16; xp++ {
-					// blank out all feature arrays for this subwindow
-					for i := range aFeats {
-						aFeats[i] = 0
-						bFeats[i] = 0
-						cFeats[i] = 0
-						dFeats[i] = 0
-					}
-					
 					// argh
 					switch {
-						case yp < 2, yp > 14, xp < 2, xp > 14:
+						case inARange(xp, yp):
 							secFeats = &aFeats
-						case (yp >= 2 && yp < 4), (yp >= 12 && yp < 14), (xp >= 2 && yp < 4), (xp >= 12 && xp < 14):
+						case inBRange(xp, yp):
 							secFeats = &bFeats
-						case (yp >= 4 && yp < 6), (yp >= 9 && yp < 12), (xp >= 4 && yp < 6), (xp >= 9 && xp < 12):
-							secFeats = &bFeats
-						case (yp >= 6 && yp <= 9), (xp >= 6 && xp <= 9):
+						case inCRange(xp, yp):
+							secFeats = &cFeats
+						default:
 							secFeats = &dFeats
 					}
 					
@@ -238,7 +258,8 @@ func featureVector(dirmat [][]int) {
 					
 					// double argh
 					switch feature {
-						case 0, 1, 2, 3: (*secFeats)[feature]++
+						case 0, 1, 2, 3:
+							(*secFeats)[feature]++
 						case 4, 5:
 							(*secFeats)[0]++
 							(*secFeats)[3]++
@@ -252,12 +273,18 @@ func featureVector(dirmat [][]int) {
 							(*secFeats)[1]++
 							(*secFeats)[2]++
 					}
-					
-					// TODO: weight features and form a real vector
 				}
+			}
+			
+			// Now that we've populated our section features, weight them and add them to our ultimate vector
+			for i := range aFeats {
+				features[featPtr] = 4*aFeats[i] + 3*bFeats[i] + 2*cFeats[i] + dFeats[i]
+				featPtr++
 			}
 		}
 	}
+	
+	return features
 }
 
 func main() {
@@ -299,6 +326,12 @@ func main() {
 	}
 	defer writer.Close()*/
 	
-	printDirMat(dirMat(contour))
-	featureVector(dirMat(contour))
+	dmc := dirMat(contour)
+	
+	// printDirMat(dirMat(contour))
+	vec := featureVector(dmc)
+	for i := range vec {
+		fmt.Printf("%d ", vec[i])
+	}
+	fmt.Print("\n")
 }
