@@ -11,9 +11,6 @@ import (
 	"os"
 )
 
-// The size of one side of a kanji square
-const KANJI_SIDE = 64
-
 const C_BLACK = 0
 const C_WHITE = 0xFFFF
 
