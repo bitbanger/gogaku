@@ -36,9 +36,11 @@ var features = map[string]int {
 }
 
 func isBlack(img image.Image, x, y int) bool {
-	r, g, b, _ := img.At(x, y).RGBA()
+	// r, g, b, _ := img.At(x, y).RGBA()
 	
-	return (r == g && g == b && b == C_BLACK)
+	// return (r == g && g == b && b == C_BLACK)
+	
+	return !isWhite(img, x, y)
 }
 
 func isWhite(img image.Image, x, y int) bool {
@@ -362,32 +364,6 @@ func main() {
 	vec1 := featureVector(dm1)
 	vec2 := featureVector(dm2)*/
 	
-	vecdb := make(map[string][][]int)
-	
-	dbr, _ := os.Open("db.txt")
-	
-	numkanji := 0
-	fmt.Fscanf(dbr, "%d", &numkanji)
-	
-	for i := 0; i < numkanji; i++ {
-		vecvec := make([][]int, 3)
-		
-		var kanji string
-		
-		fmt.Fscanf(dbr, "%s", &kanji)
-		
-		for j := 0; j < 3; j++ {
-			vecvec[j] = make([]int, 196)
-			
-			for k := 0; k < 196; k++ {
-				fmt.Fscanf(dbr, "%d", &vecvec[j][k])
-				// fmt.Printf("got %d\n", vecvec[j][k])
-			}
-		}
-		
-		vecdb[kanji] = vecvec
-	}
-	
 	
 	/*for i := 1; i < len(os.Args); i++ {
 		// fmt.Printf("%s: ", os.Args[i])
@@ -415,9 +391,40 @@ func main() {
 		fmt.Printf("\n\n\n")
 	}
 	
-	fmt.Printf("Kanji distance: %f", euclideanDistance(vec1, vec2))*/
+	os.Exit(0)*/
+	
+	// fmt.Printf("Kanji distance: %f", euclideanDistance(vec1, vec2))
 	
 	s2k := map[string]string{"tori": "鳥", "toki": "時", "aida": "間", "kokoro": "心"}
+	
+	vecdb := make(map[string][][]int)
+	
+	dbr, _ := os.Open("db.txt")
+	
+	numkanji := 0
+	fmt.Fscanf(dbr, "%d", &numkanji)
+	
+	for i := 0; i < numkanji; i++ {
+		var kanji string
+		
+		fmt.Fscanf(dbr, "%s", &kanji)
+		
+		var numvec int
+		fmt.Fscanf(dbr, "%d", &numvec)
+		
+		vecvec := make([][]int, numvec)
+		
+		for j := 0; j < numvec; j++ {
+			vecvec[j] = make([]int, 196)
+			
+			for k := 0; k < 196; k++ {
+				fmt.Fscanf(dbr, "%d", &vecvec[j][k])
+				// fmt.Printf("got %d\n", vecvec[j][k])
+			}
+		}
+		
+		vecdb[kanji] = vecvec
+	}
 	
 	for i := 1; i < len(os.Args); i++ {
 		reader, err := os.Open(os.Args[i])
@@ -435,6 +442,7 @@ func main() {
 		
 		vec := featureVector(dm)
 		
-		fmt.Printf("%s looks like a %s\n", os.Args[i], s2k[kanjiClass(vec, vecdb)])
+		kClass := kanjiClass(vec, vecdb)
+		fmt.Printf("%s looks like a %s\n", os.Args[i], s2k[kClass])
 	}
 }
