@@ -394,8 +394,6 @@ func main() {
 	
 	// fmt.Printf("Kanji distance: %f", euclideanDistance(vec1, vec2))
 	
-	s2k := map[string]string{"tori": "鳥", "toki": "時", "aida": "間", "kokoro": "心"}
-	
 	vecdb := make(map[string][][]int)
 	
 	dbr, _ := os.Open("db.txt")
@@ -442,6 +440,6 @@ func main() {
 		vec := featureVector(dm)
 		
 		kClass := kanjiClass(vec, vecdb)
-		fmt.Printf("%s looks like a %s\n", os.Args[i], s2k[kClass])
+		fmt.Printf("%s looks like a %s\n", os.Args[i], kClass)
 	}
 }
