@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	_ "image/png"
 	"log"
+	"math"
 	"os"
 )
 
@@ -173,7 +174,7 @@ func printDirMat(dirmat [][]int) {
 	for i := 0; i < 64; i++ {
 		fmt.Print("_")
 	}
-	fmt.Print(" \n\n")
+	fmt.Print(" ")
 	
 	for y := range dirmat {
 		fmt.Print("|")
@@ -184,14 +185,14 @@ func printDirMat(dirmat [][]int) {
 				fmt.Printf("%c", (65 + dirmat[y][x]))
 			}
 		}
-		fmt.Print("|\n")
+		fmt.Print("|")
 	}
 	
 	fmt.Print(" ")
 	for i := 0; i < 64; i++ {
 		fmt.Print("_")
 	}
-	fmt.Print(" \n")
+	fmt.Print(" ")
 }
 
 // These range functions do not work properly on their own.
@@ -249,6 +250,7 @@ func featureVector(dirmat [][]int) []int {
 					// select our range and set our current section pointer
 					// TODO:	better way to do section classification?
 					// 			more elegant loop?
+					//			remove the pointer to section and select another way
 					switch {
 						case inARange(xp, yp):
 							secFeats = &aFeats
@@ -294,44 +296,145 @@ func featureVector(dirmat [][]int) []int {
 	return features
 }
 
+// euclideanDistance measures the distance in Euclidean space between two vectors of like dimension.
+func euclideanDistance(vec1, vec2 []int) float64 {
+	dist := 0.0
+	
+	for i := range vec1 {
+		sub := float64(vec1[i] - vec2[i])
+		dist += sub*sub
+	}
+	
+	return math.Sqrt(dist)
+}
+
+func kanjiClass(kvec []int, vecdb map[string][][]int) string {
+	bestAvg := -1.0
+	var bestKanji string
+	for kanji, vecs := range vecdb {
+		avg := 0.0
+		denom := 0.0
+		for i := 0; i < len(vecs); i++ {
+			avg += euclideanDistance(kvec, vecs[i])
+			denom += 1.0
+		}
+		avg /= denom
+		
+		if bestAvg == -1 || avg < bestAvg {
+			bestAvg = avg
+			bestKanji = kanji
+		}
+	}
+	
+	return bestKanji
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %s <img_in>", os.Args[0])
+	/*if len(os.Args) < 2 {
+		fmt.Printf("Usage: %s <img1> <img2>", os.Args[0])
 		return
 	}
 	
 	// Create a reader and decode the data stream into an image
-	reader, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
+	reader1, err1 := os.Open(os.Args[1])
+	if err1 != nil {
+		log.Fatal(err1)
 		return
 	}
-	defer reader.Close()
+	defer reader1.Close()
 	
-	fmt.Printf("opened %s\n", os.Args[1])
-	
-	img, _, decerr := image.Decode(reader)
-	if(decerr != nil) {
-		log.Fatal(decerr)
+	reader2, err2 := os.Open(os.Args[2])
+	if err2 != nil {
+		log.Fatal(err2)
 		return
 	}
+	defer reader2.Close()
 	
-	// Grab and print the image bounds
-	bounds := img.Bounds()
+	img1, _, _ := image.Decode(reader1)
+	img2, _, _ := image.Decode(reader2)
 	
-	if bounds.Max.X != KANJI_SIDE || bounds.Max.Y != KANJI_SIDE {
-		fmt.Printf("Kanji must be %dx%d\n", KANJI_SIDE, KANJI_SIDE)
-		return
+	contour1 := makeContour(img1)
+	contour2 := makeContour(img2)
+	
+	dm1 := dirMat(contour1)
+	dm2 := dirMat(contour2)
+	
+	vec1 := featureVector(dm1)
+	vec2 := featureVector(dm2)*/
+	
+	vecdb := make(map[string][][]int)
+	
+	dbr, _ := os.Open("db.txt")
+	
+	numkanji := 0
+	fmt.Fscanf(dbr, "%d", &numkanji)
+	
+	for i := 0; i < numkanji; i++ {
+		vecvec := make([][]int, 3)
+		
+		var kanji string
+		
+		fmt.Fscanf(dbr, "%s", &kanji)
+		
+		for j := 0; j < 3; j++ {
+			vecvec[j] = make([]int, 196)
+			
+			for k := 0; k < 196; k++ {
+				fmt.Fscanf(dbr, "%d", &vecvec[j][k])
+				// fmt.Printf("got %d\n", vecvec[j][k])
+			}
+		}
+		
+		vecdb[kanji] = vecvec
 	}
 	
-	contour := makeContour(img)
 	
-	dmc := dirMat(contour)
-	
-	// printDirMat(dirMat(contour))
-	vec := featureVector(dmc)
-	for i := range vec {
-		fmt.Printf("%d ", vec[i])
+	/*for i := 1; i < len(os.Args); i++ {
+		// fmt.Printf("%s: ", os.Args[i])
+		reader, err := os.Open(os.Args[i])
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		defer reader.Close()
+		
+		img, _, _ := image.Decode(reader)
+		
+		contour := makeContour(img)
+		
+		dm := dirMat(contour)
+		
+		vec := featureVector(dm)
+		
+		ints := 0
+		for i := range vec {
+			fmt.Printf("%d ", vec[i])
+			ints++
+		}
+		
+		fmt.Printf("\n\n\n")
 	}
-	fmt.Print("\n")
+	
+	fmt.Printf("Kanji distance: %f", euclideanDistance(vec1, vec2))*/
+	
+	s2k := map[string]string{"tori": "鳥", "toki": "時", "aida": "間", "kokoro": "心"}
+	
+	for i := 1; i < len(os.Args); i++ {
+		reader, err := os.Open(os.Args[i])
+		if err != nil {
+			log.Fatal(err)
+			continue
+		}
+		defer reader.Close()
+		
+		img, _, _ := image.Decode(reader)
+		
+		contour := makeContour(img)
+		
+		dm := dirMat(contour)
+		
+		vec := featureVector(dm)
+		
+		fmt.Printf("%s looks like a %s\n", os.Args[i], s2k[kanjiClass(vec, vecdb)])
+	}
 }
