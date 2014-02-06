@@ -148,6 +148,8 @@ func pixDir(img image.Image, x, y int) int {
 	} else {
 		return NO_DIR
 	}
+	
+	return -1 // Some versions of Go need this?
 }
 
 // dirMat produces a matrix of integers describing the line direction of each pixel.
