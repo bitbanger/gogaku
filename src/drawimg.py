@@ -13,7 +13,7 @@ for i in range(0, kanji_limit * uni_len, uni_len):
 
 	draw = ImageDraw.Draw(img)
 
-	font = ImageFont.truetype("ARIALUNI.TTF", 64)
+	font = ImageFont.truetype("../ARIALUNI.TTF", 64)
 
 	kanji = joyo[i:i+uni_len]
 	print kanji
