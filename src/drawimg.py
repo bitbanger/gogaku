@@ -1,26 +1,30 @@
 # -*- coding: utf-8 -*-
 
-import Image, ImageFont, ImageDraw
+import Image, ImageFont, ImageDraw, sys
 
-joyo = raw_input()
-kanji_limit = 100
+joyo = raw_input().decode("utf-8")
+kanji_limit = len(joyo)
 
-uni_len = 3 # number of bytes in unicode; awful hack
+kanji_buf = [] # buffer of kanji to output to stdout after length
 
 num = 0
-for i in range(0, kanji_limit * uni_len, uni_len):
+for kanji in joyo:
 	img = Image.new("RGB", (64, 64), "white")
 
 	draw = ImageDraw.Draw(img)
 
 	font = ImageFont.truetype("../ARIALUNI.TTF", 64)
 
-	kanji = joyo[i:i+uni_len]
-	print kanji
+	kanji_buf.append(kanji)
 
-	draw.text((0, -12), kanji.decode("utf-8"), (0, 0, 0), font=font)
+	draw.text((0, -12), kanji, (0, 0, 0), font=font)
 	# draw.text((0, 0), u"\u250c", (0, 0, 0), font=font)
 
 	img.save("../img/training/" + str(num) + ".png")
 	
 	num += 1
+
+print len(kanji_buf)
+
+for k in kanji_buf:
+	print k.encode("utf-8")
