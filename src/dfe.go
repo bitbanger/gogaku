@@ -6,9 +6,9 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/png"
-	"log"
+	// "log"
 	"math"
-	"os"
+	// "os"
 )
 
 const C_WHITE = 0xFFFF
@@ -50,9 +50,9 @@ func inBounds(img image.Image, x, y int) bool {
 		y < bounds.Max.Y)
 }
 
-// makeContour takes a normalized kanji and removes all non-border pixels, 
+// MakeContour takes a normalized kanji and removes all non-border pixels, 
 // producing a contour line image.
-func makeContour(img image.Image) image.Image {
+func MakeContour(img image.Image) image.Image {
 	bounds := img.Bounds()
 
 	contour := image.NewRGBA(bounds)
@@ -206,8 +206,12 @@ func inCRange(x, y int) bool {
 	return (x >= 2 && x <= 13) && (y >= 2 && y <= 13)
 }
 
-// featureVector extracts a 196-dimensional vector that describes a 64x64 kanji.
-func featureVector(dirmat [][]int) []int {
+// FeatureVector extracts a 196-dimensional vector that describes a 64x64 kanji.
+func FeatureVector(img image.Image) []int {
+	// Convert our image into contour form and then into a directional matrix
+	contour := MakeContour(img)
+	dirmat := dirMat(contour)
+
 	// Initialize our feature counters
 	// One for each exclusive sub-window
 	// These are used for each sub-window, but we allocate them here and reset them in the loop
@@ -304,7 +308,11 @@ func euclideanDistance(vec1, vec2 []int) float64 {
 	return math.Sqrt(dist)
 }
 
-func kanjiClass(kvec []int, vecdb map[string][][]int) string {
+// KanjiClass determines which kanji a given 196-dimensional vector represents.
+// The function takes a kanji vector and a map of kanji names to slices of kanji vectors.
+// Each kanji may have more than one training vector. The distance is averaged over all of them.
+// The kanji name with the lowest average Euclidean distance to the input vector is returned.
+func KanjiClass(kvec []int, vecdb map[string][][]int) string {
 	bestAvg := -1.0
 	var bestKanji string
 	for kanji, vecs := range vecdb {
@@ -325,7 +333,7 @@ func kanjiClass(kvec []int, vecdb map[string][][]int) string {
 	return bestKanji
 }
 
-func main() {
+/* func main() {
 	vecdb := make(map[string][][]int)
 
 	dbr, _ := os.Open("db.txt")
@@ -364,13 +372,13 @@ func main() {
 
 		img, _, _ := image.Decode(reader)
 
-		contour := makeContour(img)
+		contour := MakeContour(img)
 
 		dm := dirMat(contour)
 
-		vec := featureVector(dm)
+		vec := FeatureVector(dm)
 
-		kClass := kanjiClass(vec, vecdb)
+		kClass := KanjiClass(vec, vecdb)
 		fmt.Printf("%s looks like a %s\n", os.Args[i], kClass)
 	}
-}
+}*/
