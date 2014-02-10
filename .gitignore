@@ -1,6 +1,7 @@
 *.exe
 whatamidoing
 dfe
+db.txt
 contour
 recog
 trainer

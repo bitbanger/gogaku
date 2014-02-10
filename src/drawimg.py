@@ -20,11 +20,7 @@ for kanji in joyo:
 	draw.text((0, -12), kanji, (0, 0, 0), font=font)
 	# draw.text((0, 0), u"\u250c", (0, 0, 0), font=font)
 
-	img.save("../img/training/" + str(num) + ".png")
+	img.save("../img/training/%s.png" % (kanji.encode("utf-8")))
 	
 	num += 1
 
-print len(kanji_buf)
-
-for k in kanji_buf:
-	print k.encode("utf-8")

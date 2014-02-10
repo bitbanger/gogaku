@@ -4,68 +4,62 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
+	"path"
+	"strings"
 )
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Printf("Usage: %s <index_in> <db_out> <img_dir>\n", os.Args[0])
+	if len(os.Args) != 3 {
+		fmt.Printf("Usage: %s <db_out> <img_dir>\n", os.Args[0])
 		return
 	}
 
-	ind_reader, ind_err := os.Open(os.Args[1])
-	if ind_err != nil {
-		log.Fatal(ind_err)
-		return
-	}
-	defer ind_reader.Close()
-
-	db_writer, db_err := os.Create(os.Args[2])
+	db_writer, db_err := os.Create(os.Args[1])
 	if db_err != nil {
 		log.Fatal(db_err)
 		return
 	}
 	defer db_writer.Close()
 
-	var numKanji int
-	fmt.Fscanf(ind_reader, "%d", &numKanji)
-
-	if numKanji <= 0 {
-		fmt.Printf("Cannot read a number of kanji less than or equal to zero\n")
+	files, fil_err := ioutil.ReadDir(os.Args[2])
+	if fil_err != nil {
+		log.Fatal(fil_err)
 		return
 	}
 
+	numKanji := len(files)
+
 	fmt.Fprintf(db_writer, "%d ", numKanji)
 
-	for i := 0; i < numKanji; i++ {
-		var kanji string
-		if num, err := fmt.Fscanf(ind_reader, "%s", &kanji); num == 1 && err == nil {
-			img_reader, img_err := os.Open(os.Args[3] + strconv.Itoa(i) + ".png")
-			if img_err != nil {
-				log.Fatal(img_err)
-				return
-			}
-			defer img_reader.Close()
+	for i := range files {
+		file := files[i].Name()
 
-			kImg, _, dec_err := image.Decode(img_reader)
-			if dec_err != nil {
-				log.Fatal(dec_err)
-				return
-			}
-
-			fmt.Fprintf(db_writer, "%s %d ", kanji, 1)
-
-			kVec := FeatureVector(kImg)
-
-			for j := range kVec {
-				fmt.Fprintf(db_writer, "%d ", kVec[j])
-			}
-		} else {
-			fmt.Printf("An error occurred reading kanji from the index.\nPerhaps there weren't as many kanji as the index declared?\n")
-			log.Fatal(err)
+		img_reader, img_err := os.Open(path.Join(os.Args[2], file))
+		if img_err != nil {
+			log.Fatal(img_err)
 			return
 		}
+
+		kImg, _, dec_err := image.Decode(img_reader)
+		if dec_err != nil {
+			log.Fatal(dec_err)
+			return
+		}
+
+		kanji := strings.Split(file, ".")[0]
+
+		// The 1 is a placeholder till I get a more varied dataset
+		fmt.Fprintf(db_writer, "%s %d ", kanji, 1)
+
+		kVec := FeatureVector(kImg)
+
+		for j := range kVec {
+			fmt.Fprintf(db_writer, "%d ", kVec[j])
+		}
+
+		img_reader.Close()
 	}
 }

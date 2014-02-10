@@ -1,2 +1,4 @@
-cat ../txt/joyo.txt | python drawimg.py > ../txt/index.txt
-./trainer ../txt/index.txt ../txt/db.txt ../img/training/
+#!/bin/sh
+
+python drawimg.py < ../txt/joyo.txt 
+./trainer ../txt/db.txt ../img/training/
