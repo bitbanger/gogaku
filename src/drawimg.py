@@ -13,7 +13,7 @@ for kanji in joyo:
 
 	draw = ImageDraw.Draw(img)
 
-	font = ImageFont.truetype("../ARIALUNI.TTF", 64)
+	font = ImageFont.truetype("../misc/ARIALUNI.TTF", 64)
 
 	kanji_buf.append(kanji)
 
