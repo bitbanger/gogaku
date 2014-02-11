@@ -6,9 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/png"
-	// "log"
 	"math"
-	// "os"
 )
 
 const C_WHITE = 0xFFFF
@@ -141,7 +139,8 @@ func pixDir(img image.Image, x, y int) int {
 		return NO_DIR
 	}
 
-	return -1 // Some versions of Go need this?
+ 	// Some versions of Go need this?
+	return -1
 }
 
 // dirMat produces a matrix of integers describing the line direction of each pixel.
@@ -333,52 +332,3 @@ func KanjiClass(kvec []int, vecdb map[string][][]int) string {
 	return bestKanji
 }
 
-/* func main() {
-	vecdb := make(map[string][][]int)
-
-	dbr, _ := os.Open("db.txt")
-
-	numkanji := 0
-	fmt.Fscanf(dbr, "%d", &numkanji)
-
-	for i := 0; i < numkanji; i++ {
-		var kanji string
-
-		fmt.Fscanf(dbr, "%s", &kanji)
-
-		var numvec int
-		fmt.Fscanf(dbr, "%d", &numvec)
-
-		vecvec := make([][]int, numvec)
-
-		for j := 0; j < numvec; j++ {
-			vecvec[j] = make([]int, 196)
-
-			for k := 0; k < 196; k++ {
-				fmt.Fscanf(dbr, "%d", &vecvec[j][k])
-			}
-		}
-
-		vecdb[kanji] = vecvec
-	}
-
-	for i := 1; i < len(os.Args); i++ {
-		reader, err := os.Open(os.Args[i])
-		if err != nil {
-			log.Fatal(err)
-			continue
-		}
-		defer reader.Close()
-
-		img, _, _ := image.Decode(reader)
-
-		contour := MakeContour(img)
-
-		dm := dirMat(contour)
-
-		vec := FeatureVector(dm)
-
-		kClass := KanjiClass(vec, vecdb)
-		fmt.Printf("%s looks like a %s\n", os.Args[i], kClass)
-	}
-}*/
