@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import Image, ImageFont, ImageDraw, sys
+import imp, sys
+
+use_pillow = False
+try:
+	imp.find_module("Image")
+except:
+	use_pillow = True
+
+if use_pillow:
+	from PIL import Image, ImageFont, ImageDraw
+else:
+	import Image, ImageFont, ImageDraw, sys
+
 
 joyo = raw_input().decode("utf-8")
 
