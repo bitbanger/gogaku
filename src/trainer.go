@@ -37,6 +37,10 @@ func main() {
 	for i := range files {
 		file := files[i].Name()
 
+		if !strings.HasSuffix(file, "png") {
+			continue
+		}
+
 		img_reader, img_err := os.Open(path.Join(os.Args[2], file))
 		if img_err != nil {
 			log.Fatal(img_err)
